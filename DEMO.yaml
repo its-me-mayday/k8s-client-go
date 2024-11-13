@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-go-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8s-go-client
+  template:
+    metadata:
+      labels:
+        app: k8s-go-client
+    spec:
+      containers:
+        - name: k8s-go-client
+          image: docker.io/mayday24/k8s-go-client:devel
+          imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8s-go-client-service
+spec:
+  selector:
+    app: k8s-go-client
+  ports:
+    - protocol: TCP
+      port: 80             
+      targetPort: 8085      
+  type: NodePort
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: namespace-reader
+rules:
+  - verbs: ["list"]
+    apiGroups: [""]
+    resources: ["namespaces"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: namespace-reader-binding
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: mayday
+roleRef:
+  kind: ClusterRole
+  name: namespace-reader
+  apiGroup: rbac.authorization.k8s.io
